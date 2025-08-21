@@ -1,6 +1,6 @@
 AI Idea Factory is a project with simple input where the user can input a text and the API will return 5 blog post ideas. It is useful for bloggers and social media users to generate different blog post ideas based on specific niche.
 
-https://github.com/user-attachments/assets/317ee9a1-6d86-43e2-a98b-b8adb02c7b05
+![ai-idea-gif](https://github.com/user-attachments/assets/a35f29ba-9aff-4c90-8907-837839f40d9a)
 
 # Installation
 - Clone the project
