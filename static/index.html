@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vue → FastAPI: Generate Ideas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+      input { padding: .5rem .75rem; }
+      button { padding: .5rem .75rem; cursor: pointer; }
+      ul { margin-top: .5rem; }
+      pre { background: #f5f5f5; padding: .75rem; border-radius: .5rem; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <idea-generator></idea-generator>
+    </div>
+
+    <!-- Vue 3 (global build) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script>
+      const backendBase = "http://127.0.0.1:8000"; // change if needed
+
+      const IdeaGenerator = {
+        template: `
+          <section>
+            <h2>Generate Ideas</h2>
+            <form @submit.prevent="send">
+              <input required v-model.trim="topic" placeholder="Enter topic" />
+              <button type="submit" :disabled="loading || !topic">
+                {{ loading ? 'Sending…' : 'Generate' }}
+              </button>
+            </form>
+
+            <p v-if="error" style="color:#c00">{{ error }}</p>
+
+            <span v-if="ideas.length">
+              <p v-for="(idea, i) in ideas" :key="i">{{ idea }}</p>
+            </span>
+
+            <!-- Show raw JSON for debugging -->
+            <pre v-if="raw && !ideas.length">{{ raw }}</pre>
+          </section>
+        `,
+        data() {
+          return {
+            topic: "",
+            loading: false,
+            error: "",
+            ideas: [],
+            raw: ""
+          };
+        },
+        methods: {
+          async send() {
+            this.loading = true;
+            this.error = ""
+            this.ideas = [];
+            this.raw = "";
+
+            try {
+              const res = await fetch(`${backendBase}/generate-ideas`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ topic: this.topic })
+              });
+
+              if (!res.ok) {
+                // try to read server error text
+                let msg = ``;
+                let data = await res.json();
+                try { msg += ` ${data.error || data.detail[0].msg}` } catch {}
+                throw new Error(msg);
+              }
+
+              const data = await res.json();
+              // expecting { ideas: [...] }
+              this.ideas = Array.isArray(data.ideas) ? data.ideas : [];
+              this.raw = JSON.stringify(data, null, 2);
+            } catch (e) {
+                console.log(e);
+              this.error = e.message || String(e);
+            } finally {
+              this.loading = false;
+            }
+          }
+        }
+      };
+
+      Vue.createApp({ components: { 'idea-generator': IdeaGenerator } }).mount("#app");
+    </script>
+  </body>
+</html>
