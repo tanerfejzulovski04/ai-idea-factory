@@ -40,6 +40,9 @@ async def generate_ideas(data: Topic):
         message = error_json.get("error", {}).get("message", "Unknown error")
         return JSONResponse(status_code=404, content={"error": message})
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "message": "OK"}
 
 # Use /static/index.html for UI
 @app.get("/")
